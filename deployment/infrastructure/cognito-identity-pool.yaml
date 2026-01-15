@@ -125,6 +125,7 @@ Resources:
   # Managed Policy for Bedrock Access
   # Note: Cross-region inference requires access to all regions in the profile (us-east-1, us-east-2, us-west-2)
   # as requests may be routed to any of these regions automatically
+  # Global CRIS uses aws:RequestedRegion: unspecified for dynamic routing
   BedrockAccessPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -132,7 +133,7 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Sid: AllowBedrockInvoke
+          - Sid: AllowBedrockInvokeRegional
             Effect: Allow
             Action:
               - 'bedrock:InvokeModel'
@@ -143,7 +144,17 @@ Resources:
             Condition:
               StringEquals:
                 'aws:RequestedRegion': !Ref AllowedBedrockRegions
-          - Sid: AllowBedrockList
+          - Sid: AllowBedrockInvokeGlobal
+            Effect: Allow
+            Action:
+              - 'bedrock:InvokeModel'
+              - 'bedrock:InvokeModelWithResponseStream'
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:bedrock:::foundation-model/*'
+            Condition:
+              StringEquals:
+                'aws:RequestedRegion': 'unspecified'
+          - Sid: AllowBedrockListRegional
             Effect: Allow
             Action:
               - 'bedrock:ListFoundationModels'
@@ -155,6 +166,18 @@ Resources:
             Condition:
               StringEquals:
                 'aws:RequestedRegion': !Ref AllowedBedrockRegions
+          - Sid: AllowBedrockListGlobal
+            Effect: Allow
+            Action:
+              - 'bedrock:ListFoundationModels'
+              - 'bedrock:GetFoundationModel'
+              - 'bedrock:GetFoundationModelAvailability'
+              - 'bedrock:ListInferenceProfiles'
+              - 'bedrock:GetInferenceProfile'
+            Resource: '*'
+            Condition:
+              StringEquals:
+                'aws:RequestedRegion': 'unspecified'
           - !If
             - MonitoringEnabled
             - Sid: AllowCloudWatchOTLP

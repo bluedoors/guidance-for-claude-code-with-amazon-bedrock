@@ -115,6 +115,9 @@ Resources:
               - 'bedrock-runtime:Converse'
             Resource:
               - !Sub 'arn:${AWS::Partition}:bedrock:::foundation-model/*'
+            Condition:
+              StringEquals:
+                'aws:RequestedRegion': 'unspecified'
           - Sid: AllowBedrockListRegional
             Effect: Allow
             Action:
@@ -136,6 +139,9 @@ Resources:
               - 'bedrock:ListInferenceProfiles'
               - 'bedrock:GetInferenceProfile'
             Resource: '*'
+            Condition:
+              StringEquals:
+                'aws:RequestedRegion': 'unspecified'
           - !If
             - MonitoringEnabled
             - Sid: AllowCloudWatchMetrics
